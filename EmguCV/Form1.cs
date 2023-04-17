@@ -116,7 +116,9 @@ namespace EmguCV
         {
             pic.Image = imgList[e.Node.Text].AsBitmap();
         }
-        List<string> lstZone = new List<string>() { "ZONE 8", "ZONE 28","ZONE 49" };
+        List<string> lstZone = new List<string>() { "ZONE 8", "ZONE 28","ZONE 49","ZONE 2" };
+        Image<Bgr, byte> img;
+        Image<Bgr, byte> dec;
         private void btnTim_Click(object sender, EventArgs e)
         {
             //if(pic.Image==null|| rectangle == Rectangle.Empty)
@@ -124,8 +126,11 @@ namespace EmguCV
             //    return;
             //}
             var imgOrg = imgList["input"].Clone();
+            img = imgList["input"].Clone();
+           
             foreach (var item in lstZone)
             {
+                bool stLabel = false;
                 string[] fileName = Directory.GetFiles("./" + item + "/", "*.jpg");
                 for(int i = 0; i < fileName.Length; i++)
                 {
@@ -141,12 +146,34 @@ namespace EmguCV
                     Rectangle rec = new Rectangle(maxLoc, temp.Size);
                     var outI = imgOrg.Copy();
                     CvInvoke.Rectangle(imgOrg, rec, new MCvScalar(0, 0, 255), -1);
-                    CvInvoke.AddWeighted(outI, 0.5, imgOrg, 1 - 0.5, 1, outI);
+                    CvInvoke.AddWeighted(outI, 0.5, imgOrg, 1 - 0.5, 0, outI);
                     imgOrg = outI;
+                    if (stLabel == false)
+                    {
+                        CvInvoke.PutText(imgOrg, "ALARM " + item, maxLoc, Emgu.CV.CvEnum.FontFace.HersheyTriplex, 1,new MCvScalar(255,119,51));
+                        stLabel = true;
+                    }
                 }
+                dec = imgOrg;
                 pic.Image = imgOrg.AsBitmap();
             }
+            Timer timer = new Timer();
+            timer.Enabled = true;
+            timer.Interval = 1000;
+            timer.Tick += timer_Tick;
             
+        }
+
+        private void timer_Tick(object sender, EventArgs e)
+        {
+            if (DateTime.Now.Second % 2 == 0)
+            {
+                pic.Image = dec.AsBitmap();
+            }
+            else
+            {
+                pic.Image = img.AsBitmap();
+            }
         }
 
         private void btnChonAnh_Click(object sender, EventArgs e)
